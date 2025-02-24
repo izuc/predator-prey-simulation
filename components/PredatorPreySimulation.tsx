@@ -352,8 +352,8 @@ const PredatorPreySimulation = () => {
           </div>
         )}
         
-        {/* Legend - Collapsible on mobile */}
-        <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm p-3 rounded-xl shadow-md text-[10px] sm:text-xs space-y-2">
+        {/* Legend - Hidden on mobile */}
+        <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm p-3 rounded-xl shadow-md text-[10px] sm:text-xs space-y-2 hidden md:block">
           <div className="flex items-center gap-3">
             <span className="text-lg sm:text-xl">🐰</span>
             <span className="font-medium">Prey</span>
@@ -472,6 +472,11 @@ const PredatorPreySimulation = () => {
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Footer */}
+      <div className="text-center text-sm text-gray-500 mt-4">
+        Created by <a href="https://lance.name" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 font-medium transition-colors">Lance</a>
       </div>
     </div>
   )
