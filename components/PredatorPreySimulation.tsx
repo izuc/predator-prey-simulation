@@ -329,11 +329,16 @@ const PredatorPreySimulation = () => {
   }
 
   return (
-    <div className="flex flex-col w-full max-w-4xl mx-auto gap-2 sm:gap-4 p-2 sm:p-4">
-      <h1 className="text-lg sm:text-2xl font-bold text-center">Predator-Prey Simulation</h1>
+    <div className="flex flex-col w-full max-w-4xl mx-auto gap-3 sm:gap-6 p-3 sm:p-6 min-h-screen bg-gradient-to-b from-blue-50 to-green-50">
+      <div className="text-center space-y-2">
+        <h1 className="text-2xl sm:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-green-600">
+          🦊 Predator-Prey Simulation 🐰
+        </h1>
+        <p className="text-sm sm:text-base text-gray-600">Watch the ecosystem evolve as foxes hunt rabbits and rabbits graze on grass</p>
+      </div>
       
       {/* Main simulation area */}
-      <div className="relative w-full aspect-[4/3] bg-gray-100 rounded-lg overflow-hidden shadow-md">
+      <div className="relative w-full aspect-[4/3] bg-gradient-to-br from-white to-gray-50 rounded-xl overflow-hidden shadow-lg border border-gray-100">
         <canvas 
           ref={canvasRef} 
           className="absolute inset-0 w-full h-full"
@@ -341,27 +346,29 @@ const PredatorPreySimulation = () => {
         />
         {entities.length === 0 && (
           <div className="absolute inset-0 flex items-center justify-center text-gray-500 text-sm sm:text-base">
-            No entities to display. Try resetting the simulation.
+            <div className="bg-white/90 backdrop-blur-sm p-4 rounded-lg shadow-sm">
+              No entities to display. Try resetting the simulation.
+            </div>
           </div>
         )}
         
         {/* Legend - Collapsible on mobile */}
-        <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm p-2 rounded-lg shadow-sm text-[10px] sm:text-xs space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="text-base">🐰</span>
-            <span>Prey</span>
+        <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm p-3 rounded-xl shadow-md text-[10px] sm:text-xs space-y-2">
+          <div className="flex items-center gap-3">
+            <span className="text-lg sm:text-xl">🐰</span>
+            <span className="font-medium">Prey</span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-base">🦊</span>
-            <span>Predator</span>
+          <div className="flex items-center gap-3">
+            <span className="text-lg sm:text-xl">🦊</span>
+            <span className="font-medium">Predator</span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-base">🌿</span>
-            <span>Grass (Active)</span>
+          <div className="flex items-center gap-3">
+            <span className="text-lg sm:text-xl">🌿</span>
+            <span className="font-medium">Grass (Active)</span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-base opacity-50">🌿</span>
-            <span>Grass (Consumed)</span>
+          <div className="flex items-center gap-3">
+            <span className="text-lg sm:text-xl opacity-50">🌿</span>
+            <span className="font-medium">Grass (Consumed)</span>
           </div>
         </div>
       </div>
@@ -370,55 +377,67 @@ const PredatorPreySimulation = () => {
       <div className="relative">
         <button 
           onClick={() => setShowStats(!showStats)}
-          className="md:hidden w-full px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg mb-2 flex items-center justify-between"
+          className="md:hidden w-full px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-xl shadow-sm mb-2 flex items-center justify-between border border-gray-100"
         >
           {showStats ? "Hide Stats" : "Show Stats"}
           <span className="text-xs">
-            Prey: {stats.prey} | Pred: {stats.predators} | Grass: {stats.grassCoverage}%
+            🐰 {stats.prey} | 🦊 {stats.predators} | 🌿 {stats.grassCoverage}%
           </span>
         </button>
         <div className={`${showStats ? 'block' : 'hidden'} md:block`}>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 p-2 sm:p-4 bg-gray-50 rounded-lg shadow-sm text-center">
-            <div className="bg-white p-2 rounded-md">
-              <div className="text-base sm:text-lg font-semibold text-blue-600">{stats.prey}</div>
-              <div className="text-[10px] sm:text-sm text-gray-600">Prey</div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 p-3 sm:p-4 bg-white rounded-xl shadow-sm border border-gray-100">
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-3 rounded-xl">
+              <div className="text-base sm:text-xl font-bold text-blue-600 flex items-center justify-center gap-2">
+                <span>🐰</span>{stats.prey}
+              </div>
+              <div className="text-[10px] sm:text-sm text-blue-600/70 font-medium text-center">Prey</div>
             </div>
-            <div className="bg-white p-2 rounded-md">
-              <div className="text-base sm:text-lg font-semibold text-red-600">{stats.predators}</div>
-              <div className="text-[10px] sm:text-sm text-gray-600">Predators</div>
+            <div className="bg-gradient-to-br from-red-50 to-red-100 p-3 rounded-xl">
+              <div className="text-base sm:text-xl font-bold text-red-600 flex items-center justify-center gap-2">
+                <span>🦊</span>{stats.predators}
+              </div>
+              <div className="text-[10px] sm:text-sm text-red-600/70 font-medium text-center">Predators</div>
             </div>
-            <div className="bg-white p-2 rounded-md">
-              <div className="text-base sm:text-lg font-semibold text-green-600">{stats.grassCoverage}%</div>
-              <div className="text-[10px] sm:text-sm text-gray-600">Grass</div>
+            <div className="bg-gradient-to-br from-green-50 to-green-100 p-3 rounded-xl">
+              <div className="text-base sm:text-xl font-bold text-green-600 flex items-center justify-center gap-2">
+                <span>🌿</span>{stats.grassCoverage}%
+              </div>
+              <div className="text-[10px] sm:text-sm text-green-600/70 font-medium text-center">Grass</div>
             </div>
-            <div className="bg-white p-2 rounded-md">
-              <div className="text-base sm:text-lg font-semibold text-gray-600">{stats.predatorKills}</div>
-              <div className="text-[10px] sm:text-sm text-gray-600">Kills</div>
+            <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-3 rounded-xl">
+              <div className="text-base sm:text-xl font-bold text-gray-600 flex items-center justify-center gap-2">
+                <span>💀</span>{stats.predatorKills}
+              </div>
+              <div className="text-[10px] sm:text-sm text-gray-600/70 font-medium text-center">Kills</div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Population Graph */}
-      <PopulationGraph stats={stats} isRunning={isRunning} />
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3">
+        <PopulationGraph stats={stats} isRunning={isRunning} />
+      </div>
 
       {/* Controls Section */}
-      <div className="space-y-2 sm:space-y-4">
-        <Controls
-          isRunning={isRunning}
-          setIsRunning={setIsRunning}
-          onReset={handleReset}
-          speed={speed}
-          setSpeed={setSpeed}
-        />
+      <div className="space-y-3 sm:space-y-4">
+        <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
+          <Controls
+            isRunning={isRunning}
+            setIsRunning={setIsRunning}
+            onReset={handleReset}
+            speed={speed}
+            setSpeed={setSpeed}
+          />
+        </div>
 
         {/* Settings Panel - Collapsible on Mobile */}
-        <div className="bg-white rounded-lg p-2 sm:p-4 shadow-sm">
+        <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
           <button 
             onClick={() => setShowSettings(!showSettings)}
             className="md:hidden w-full text-left mb-2 text-sm font-semibold text-gray-700 flex items-center justify-between"
           >
-            <span>Simulation Settings</span>
+            <span>⚙️ Simulation Settings</span>
             <span className="text-xs text-gray-500">{showSettings ? "Hide" : "Show"}</span>
           </button>
           <div className={`${showSettings ? 'block' : 'hidden'} md:block`}>
@@ -427,29 +446,29 @@ const PredatorPreySimulation = () => {
         </div>
 
         {/* Logs Panel - Collapsible on Mobile */}
-        <div className="bg-white rounded-lg p-2 sm:p-4 shadow-sm">
+        <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
           <button 
             onClick={() => setShowLogs(!showLogs)}
             className="md:hidden w-full text-left mb-2 text-sm font-semibold text-gray-700 flex items-center justify-between"
           >
-            <span>Event Log</span>
+            <span>📝 Event Log</span>
             <span className="text-xs text-gray-500">{showLogs ? "Hide" : "Show"}</span>
           </button>
           <div className={`${showLogs ? 'block' : 'hidden'} md:block`}>
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-semibold text-gray-700">Event Log</h3>
+              <h3 className="text-sm font-semibold text-gray-700 md:block hidden">📝 Event Log</h3>
               <span className="text-[10px] text-gray-500">{debugInfo}</span>
             </div>
-            <div className="h-20 sm:h-32 overflow-y-auto border border-gray-200 rounded-lg p-2 text-[10px] sm:text-xs space-y-1">
+            <div className="h-20 sm:h-32 overflow-y-auto border border-gray-100 rounded-xl p-3 text-[10px] sm:text-xs space-y-1 bg-gray-50">
               {logs.map((log, index) => (
                 <p key={index} className="text-gray-600">{log}</p>
               ))}
             </div>
             <button 
               onClick={exportLogs} 
-              className="mt-2 w-full px-2 py-1 sm:px-4 sm:py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-[10px] sm:text-sm"
+              className="mt-2 w-full px-3 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all text-[10px] sm:text-sm font-medium shadow-sm"
             >
-              Export Logs
+              📥 Export Logs
             </button>
           </div>
         </div>
