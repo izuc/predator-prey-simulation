@@ -240,14 +240,23 @@ const PredatorPreySimulation = () => {
 
     // Draw entities
     entities.forEach((entity) => {
-      if (entity.type === "grass") {
-        ctx.fillStyle = entity.energy > 0 ? "#22c55e" : "#92400e" // green-500 and brown-500
-      } else {
-        ctx.fillStyle = entity.type === "prey" ? "#3b82f6" : "#ef4444" // blue-500 and red-500
-      }
       const x = offsetX + entity.x * settings.cellSize;
-      const y = offsetY + entity.y * settings.cellSize;
-      ctx.fillRect(x, y, settings.cellSize, settings.cellSize)
+      const y = offsetY + entity.y * settings.cellSize + settings.cellSize;  // Adjust y for text baseline
+      
+      ctx.font = `${settings.cellSize}px Arial`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+
+      if (entity.type === "grass") {
+        ctx.fillStyle = entity.energy > 0 ? "#22c55e" : "#92400e"; // green-500 and brown-500
+        ctx.fillText("🌿", x + settings.cellSize/2, y);
+      } else if (entity.type === "prey") {
+        ctx.fillStyle = "#000000";
+        ctx.fillText("🐰", x + settings.cellSize/2, y);
+      } else {
+        ctx.fillStyle = "#000000";
+        ctx.fillText("🦊", x + settings.cellSize/2, y);
+      }
     })
 
     // Draw grid lines
@@ -339,19 +348,19 @@ const PredatorPreySimulation = () => {
         {/* Legend - Collapsible on mobile */}
         <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm p-2 rounded-lg shadow-sm text-[10px] sm:text-xs space-y-1">
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 sm:w-3 sm:h-3 bg-blue-500"></div>
+            <span className="text-base">🐰</span>
             <span>Prey</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 sm:w-3 sm:h-3 bg-red-500"></div>
+            <span className="text-base">🦊</span>
             <span>Predator</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 sm:w-3 sm:h-3 bg-green-500"></div>
+            <span className="text-base">🌿</span>
             <span>Grass (Active)</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 sm:w-3 sm:h-3 bg-brown-500"></div>
+            <span className="text-base opacity-50">🌿</span>
             <span>Grass (Consumed)</span>
           </div>
         </div>
