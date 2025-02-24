@@ -335,8 +335,12 @@ const PredatorPreySimulation = () => {
   return (
     <div className="flex flex-col w-full max-w-4xl mx-auto gap-3 sm:gap-6 p-3 sm:p-6 min-h-screen bg-gradient-to-b from-blue-50 to-green-50">
       <div className="text-center space-y-2">
-        <h1 className="text-2xl sm:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-green-600">
-          🦊 Predator-Prey Simulation 🐰
+        <h1 className="text-2xl sm:text-4xl font-bold">
+          <span className="text-red-600">🦊</span>
+          <span className="bg-clip-text text-transparent bg-gradient-to-r from-red-600 via-purple-600 to-blue-600">
+            {" "}Predator-Prey Simulation{" "}
+          </span>
+          <span className="text-blue-600">🐰</span>
         </h1>
         <p className="text-sm sm:text-base text-gray-600">Watch the ecosystem evolve as foxes hunt rabbits and rabbits graze on grass</p>
       </div>
