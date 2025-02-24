@@ -7,6 +7,12 @@ try {
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'export',
+  assetPrefix: './',
+  trailingSlash: true,
+  images: {
+    unoptimized: true,
+  },
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -15,7 +21,6 @@ const nextConfig = {
   },
   reactStrictMode: true,
   swcMinify: true,
-  compress: false, // Disable compression in development
   webpack: (config, { dev, isServer }) => {
     // Development optimizations
     if (dev) {
@@ -46,6 +51,7 @@ const nextConfig = {
     if (!dev && !isServer) {
       config.optimization = {
         ...config.optimization,
+        minimize: true,
         splitChunks: {
           chunks: 'all',
           minSize: 10000,
@@ -61,8 +67,6 @@ const nextConfig = {
   // Disable compression middleware
   poweredByHeader: false,
   generateEtags: true,
-  // Add output configuration for better chunk handling
-  output: 'standalone',
   experimental: {
     optimizePackageImports: ['react', 'react-dom']
   }

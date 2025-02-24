@@ -113,26 +113,30 @@ const PredatorPreySimulation = () => {
   useEffect(() => {
     const updateDimensions = () => {
       if (!canvasRef.current) return;
+      const canvas = canvasRef.current;
+      const container = canvas.parentElement;
+      if (!container) return;
 
-      const isMobile = window.innerWidth < 640;
-      const containerWidth = isMobile ? window.innerWidth - 16 : Math.min(window.innerWidth - 32, 800);
-      const containerHeight = isMobile ? window.innerHeight * 0.4 : Math.min(window.innerHeight * 0.6, 600);
+      // Get the container's dimensions
+      const containerWidth = container.clientWidth;
+      const containerHeight = container.clientHeight;
       
-      const targetAspectRatio = 4/3;
-      let width, height;
+      // Update canvas size to match container
+      canvas.width = containerWidth;
+      canvas.height = containerHeight;
+
+      // Calculate cell size to fit the grid within the canvas
+      // Add padding to ensure emojis don't get cut off
+      const padding = 40; // pixels of padding
+      const availableWidth = containerWidth - (padding * 2);
+      const availableHeight = containerHeight - (padding * 2);
       
-      if (containerWidth / containerHeight > targetAspectRatio) {
-        height = containerHeight;
-        width = height * targetAspectRatio;
-      } else {
-        width = containerWidth;
-        height = width / targetAspectRatio;
-      }
-
-      canvasRef.current.width = width;
-      canvasRef.current.height = height;
-
-      const cellSize = width / settings.gridSize;
+      // Use the more constraining dimension to determine cell size
+      const cellSize = Math.min(
+        availableWidth / settings.gridSize,
+        availableHeight / settings.gridSize
+      );
+      
       setSettings(prev => ({ ...prev, cellSize }));
     };
 
@@ -226,7 +230,7 @@ const PredatorPreySimulation = () => {
     const gridPixelWidth = settings.gridSize * settings.cellSize;
     const gridPixelHeight = settings.gridSize * settings.cellSize;
 
-    // Center the grid in the canvas
+    // Center the grid in the canvas with padding
     const offsetX = (canvas.width - gridPixelWidth) / 2;
     const offsetY = (canvas.height - gridPixelHeight) / 2;
 
@@ -238,26 +242,26 @@ const PredatorPreySimulation = () => {
     ctx.fillStyle = "#ffffff"; // white
     ctx.fillRect(offsetX, offsetY, gridPixelWidth, gridPixelHeight);
 
-    // Draw entities
+    // Draw entities with adjusted positioning
     entities.forEach((entity) => {
       const x = offsetX + entity.x * settings.cellSize;
-      const y = offsetY + entity.y * settings.cellSize + settings.cellSize;  // Adjust y for text baseline
+      const y = offsetY + entity.y * settings.cellSize;
       
       ctx.font = `${settings.cellSize}px Arial`;
       ctx.textAlign = 'center';
-      ctx.textBaseline = 'bottom';
+      ctx.textBaseline = 'middle';
 
       if (entity.type === "grass") {
-        ctx.fillStyle = entity.energy > 0 ? "#22c55e" : "#92400e"; // green-500 and brown-500
-        ctx.fillText("🌿", x + settings.cellSize/2, y);
+        ctx.fillStyle = entity.energy > 0 ? "#22c55e" : "#92400e";
+        ctx.fillText("🌿", x + settings.cellSize/2, y + settings.cellSize/2);
       } else if (entity.type === "prey") {
         ctx.fillStyle = "#000000";
-        ctx.fillText("🐰", x + settings.cellSize/2, y);
+        ctx.fillText("🐰", x + settings.cellSize/2, y + settings.cellSize/2);
       } else {
         ctx.fillStyle = "#000000";
-        ctx.fillText("🦊", x + settings.cellSize/2, y);
+        ctx.fillText("🦊", x + settings.cellSize/2, y + settings.cellSize/2);
       }
-    })
+    });
 
     // Draw grid lines
     ctx.lineWidth = 1
@@ -338,11 +342,17 @@ const PredatorPreySimulation = () => {
       </div>
       
       {/* Main simulation area */}
-      <div className="relative w-full aspect-[4/3] bg-gradient-to-br from-white to-gray-50 rounded-xl overflow-hidden shadow-lg border border-gray-100">
+      <div className="relative w-full h-[60vh] sm:h-[70vh] bg-gradient-to-br from-white to-gray-50 rounded-xl overflow-hidden shadow-lg border border-gray-100">
         <canvas 
           ref={canvasRef} 
           className="absolute inset-0 w-full h-full"
-          style={{ imageRendering: 'pixelated' }}
+          style={{ 
+            imageRendering: 'pixelated',
+            width: '100%',
+            height: '100%',
+            display: 'block',
+            touchAction: 'none'
+          }}
         />
         {entities.length === 0 && (
           <div className="absolute inset-0 flex items-center justify-center text-gray-500 text-sm sm:text-base">
