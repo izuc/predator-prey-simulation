@@ -28,19 +28,19 @@ const PredatorPreySimulation = () => {
     cellSize: 6,
     initialPrey: 50,
     initialPredators: 10,
-    initialGrass: 1000,
-    grassRegrowthRate: 0.02,
-    preyReproductionRate: 0.05,
-    predatorReproductionRate: 0.03,
-    preyEnergyGain: 4,
-    predatorEnergyGain: 10,
-    preyEnergyLoss: 0.2,
-    predatorEnergyLoss: 0.5,
+    initialGrass: 500,
+    grassRegrowthRate: 0.05,
+    preyReproductionRate: 0.1,
+    predatorReproductionRate: 0.05,
+    preyEnergyGain: 5,
+    predatorEnergyGain: 15,
+    preyEnergyLoss: 0.1,
+    predatorEnergyLoss: 0.3,
     preyMaxAge: 100,
     predatorMaxAge: 150,
-    preyMaturityAge: 15,
-    predatorMaturityAge: 25,
-    carryingCapacityFactor: 0.2,
+    preyMaturityAge: 10,
+    predatorMaturityAge: 20,
+    carryingCapacityFactor: 0.1,
     grassRegenerationTime: 20,
   })
 
@@ -450,5 +450,3 @@ const PredatorPreySimulation = () => {
 }
 
 export default PredatorPreySimulation;
-
-

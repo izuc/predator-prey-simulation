@@ -7,9 +7,9 @@ export interface Entity {
   age: number;
   lastReproduced?: number;
   foodEaten?: number;
-  hunger: number; // Changed from optional to required with default 0
+  hunger: number;
   isEating?: boolean;
-  nutrition?: number; // How much food value this grass/prey has
+  nutrition?: number;
 }
 
 export interface SimulationSettings {
@@ -37,18 +37,6 @@ export const initializeSimulation = (settings: SimulationSettings): Entity[] => 
   const entities: Entity[] = [];
   const positions = new Set<string>();
 
-  // Adjusted settings for realism
-  settings.initialGrass = 1200; // More initial grass
-  settings.grassRegrowthRate = 0.03; // Faster grass growth
-  settings.grassRegenerationTime = 15; // Faster regrowth
-  settings.preyEnergyGain = 6; // More energy from grass
-  settings.predatorEnergyGain = 20; // More energy from prey
-  settings.preyEnergyLoss = 0.15; // Slower energy loss
-  settings.predatorEnergyLoss = 0.3; // Slower energy loss
-  settings.preyReproductionRate = 0.1; // Faster prey reproduction
-  settings.predatorReproductionRate = 0.06; // Faster predator reproduction
-  settings.carryingCapacityFactor = 0.25; // Higher sustainable population
-
   const initialPreyEnergy = 20;
   const initialPredatorEnergy = 30;
 
@@ -67,7 +55,7 @@ export const initializeSimulation = (settings: SimulationSettings): Entity[] => 
       type: "grass",
       energy: 1,
       age: 0,
-      hunger: 0, // Added for consistency, though unused for grass
+      hunger: 0,
       nutrition: Math.floor(Math.random() * 3) + 1,
     });
   }
@@ -139,7 +127,7 @@ const moveEntity = (
     return null;
   }
 
-  const sightRange = entity.type === "prey" ? 2 : 4; // Increased predator sight range
+  const sightRange = entity.type === "prey" ? 2 : 4;
   const nearbyEntities = entities.filter(
     (e) =>
       Math.abs(e.x - entity.x) <= sightRange &&
@@ -186,7 +174,7 @@ const moveEntity = (
           entity.x = (entity.x + Math.sign(dx) + settings.gridSize) % settings.gridSize;
           entity.y = (entity.y + Math.sign(dy) + settings.gridSize) % settings.gridSize;
         }
-      } else if (Math.random() < 0.3) {
+      } else if (Math.random() < 0.5) { // Increased from 0.3 to 0.5
         const direction = Math.floor(Math.random() * 4);
         switch (direction) {
           case 0: entity.x = (entity.x + 1) % settings.gridSize; break;
@@ -210,7 +198,7 @@ const moveEntity = (
       });
       const dx = closestPrey.x - entity.x;
       const dy = closestPrey.y - entity.y;
-      const moveSteps = entity.hunger > 50 ? 2 : 1; // Faster when hungry
+      const moveSteps = entity.hunger > 50 ? 2 : 1;
       entity.x = (entity.x + Math.sign(dx) * moveSteps + settings.gridSize) % settings.gridSize;
       entity.y = (entity.y + Math.sign(dy) * moveSteps + settings.gridSize) % settings.gridSize;
       if (entity.x === closestPrey.x && entity.y === closestPrey.y) {
@@ -221,7 +209,7 @@ const moveEntity = (
         entity.hunger = Math.max(0, entity.hunger - 60);
         closestPrey.energy = -1; // Mark for removal
       }
-    } else if (Math.random() < 0.3) {
+    } else if (Math.random() < 0.5) { // Increased from 0.3 to 0.5
       const direction = Math.floor(Math.random() * 4);
       switch (direction) {
         case 0: entity.x = (entity.x + 1) % settings.gridSize; break;
@@ -249,15 +237,10 @@ const moveEntity = (
         ? Math.min(1, 2.0 - preyCount / maxPrey)
         : Math.min(1, 3.0 - predatorCount / maxPredators);
 
-    // Calculate final reproduction chance in a single expression
     const reproductionChance = 
-      // Base rate with type multiplier
       (entity.type === "prey" ? settings.preyReproductionRate * 3.0 : settings.predatorReproductionRate * 6.0)
-      // Population control factor
       * populationFactor
-      // Food eaten factor
       * Math.min((entity.foodEaten || 0) / 1, 1)
-      // Eating bonus for predators (1.0 for prey, 2.0 for eating predators, 1.0 for non-eating predators)
       * (entity.type === "predator" && entity.isEating ? 2.0 : 1.0);
 
     if (Math.random() < reproductionChance) {
@@ -332,8 +315,8 @@ export const updateSimulation = (
   });
 
   if (Math.random() < settings.grassRegrowthRate) {
-    const occupiedPositions = new Set(newEntities.map((e) => `${e.x},${e.y}`)); // Fixed typo: was `${e.x},${y}`
-    let x: number, y: number; // Explicitly typed x and y
+    const occupiedPositions = new Set(newEntities.map((e) => `${e.x},${e.y}`));
+    let x: number, y: number;
     do {
       x = Math.floor(Math.random() * settings.gridSize);
       y = Math.floor(Math.random() * settings.gridSize);
@@ -345,7 +328,7 @@ export const updateSimulation = (
       type: "grass",
       energy: 1,
       age: 0,
-      hunger: 0, // Added for consistency
+      hunger: 0,
       nutrition: Math.floor(Math.random() * 3) + 1,
     });
     events.push(`New grass grew at (${x}, ${y})`);
