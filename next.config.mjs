@@ -13,17 +13,59 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  images: {
-    unoptimized: true,
+  reactStrictMode: true,
+  swcMinify: true,
+  compress: false, // Disable compression in development
+  webpack: (config, { dev, isServer }) => {
+    // Development optimizations
+    if (dev) {
+      config.optimization = {
+        ...config.optimization,
+        minimize: false,
+        moduleIds: 'named',
+        chunkIds: 'named',
+        splitChunks: {
+          chunks: 'all',
+          minSize: 20000,
+          maxSize: 244000,
+          cacheGroups: {
+            vendor: {
+              test: /[\\/]node_modules[\\/]/,
+              name: 'vendors',
+              priority: 20,
+              enforce: true,
+              chunks: 'all'
+            }
+          }
+        },
+        runtimeChunk: 'single'
+      }
+    }
+
+    // Production optimizations
+    if (!dev && !isServer) {
+      config.optimization = {
+        ...config.optimization,
+        splitChunks: {
+          chunks: 'all',
+          minSize: 10000,
+          maxSize: 250000,
+        }
+      }
+    }
+
+    return config
   },
+  // Improve caching behavior
+  generateBuildId: async () => 'build',
+  // Disable compression middleware
+  poweredByHeader: false,
+  generateEtags: true,
+  // Add output configuration for better chunk handling
+  output: 'standalone',
   experimental: {
-    webpackBuildWorker: true,
-    parallelServerBuildTraces: true,
-    parallelServerCompiles: true,
-  },
-  output: 'export',
-  basePath: '/predator-prey-simulation',
-  assetPrefix: '/predator-prey-simulation/',
+    optimizePackageImports: ['react', 'react-dom']
+  }
 }
 
 mergeConfig(nextConfig, userConfig)

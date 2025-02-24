@@ -1,6 +1,6 @@
 "use client"
 
-import { PredatorPreySimulation } from "../components/PredatorPreySimulation"
+import PredatorPreySimulation from "../components/PredatorPreySimulation"
 
 export default function Home() {
   return (

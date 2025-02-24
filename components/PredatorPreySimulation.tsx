@@ -1,12 +1,13 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { Controls } from "./Controls"
 import { PopulationGraph } from "./PopulationGraph"
 import { initializeSimulation, updateSimulation, type Entity, type SimulationSettings } from "../utils/simulation"
 import { SimulationControls } from "./SimulationControls"
+import { loadSimulationState, saveSimulationState } from "../utils/db"
 
-export const PredatorPreySimulation = () => {
+const PredatorPreySimulation = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isRunning, setIsRunning] = useState(false)
   const [entities, setEntities] = useState<Entity[]>([])
@@ -18,6 +19,9 @@ export const PredatorPreySimulation = () => {
   const [showStats, setShowStats] = useState(true)
   const [showSettings, setShowSettings] = useState(true)
   const [showLogs, setShowLogs] = useState(true)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [hasLoadedInitialState, setHasLoadedInitialState] = useState(false)
 
   const [settings, setSettings] = useState<SimulationSettings>({
     gridSize: 50,
@@ -40,70 +44,174 @@ export const PredatorPreySimulation = () => {
     grassRegenerationTime: 20,
   })
 
+  // Save current state
+  const saveCurrentState = useCallback(async (currentEntities: Entity[], forceUpdate = false) => {
+    if (!currentEntities.length && !forceUpdate) return;
+    
+    try {
+      const currentStats = {
+        prey: currentEntities.filter((e) => e.type === "prey").length,
+        predators: currentEntities.filter((e) => e.type === "predator").length,
+        grassCoverage: Math.round((currentEntities.filter((e) => e.type === "grass" && e.energy > 0).length / (settings.gridSize * settings.gridSize)) * 100),
+        predatorKills: stats.predatorKills
+      };
+
+      await saveSimulationState({
+        entities: currentEntities,
+        settings,
+        stats: currentStats,
+        timestamp: Date.now()
+      });
+      console.debug('State saved with', currentEntities.length, 'entities');
+    } catch (error) {
+      console.error("Error saving state:", error);
+      setError("Failed to save simulation state");
+    }
+  }, [settings, stats.predatorKills]);
+
+  // Load saved state on component mount
+  useEffect(() => {
+    const loadSavedState = async () => {
+      if (typeof window === 'undefined') return;
+      
+      try {
+        setIsLoading(true);
+        const savedState = await loadSimulationState();
+        console.debug('Loaded state:', savedState ? 'found' : 'not found');
+        
+        if (savedState && savedState.entities.length > 0) {
+          setEntities(savedState.entities);
+          setSettings(savedState.settings);
+          setStats(savedState.stats);
+          setLogs(prev => [...prev, "Loaded previous simulation state"]);
+          console.debug('Restored', savedState.entities.length, 'entities');
+        } else {
+          console.debug('No saved state found, initializing new simulation');
+          const initialEntities = initializeSimulation(settings);
+          setEntities(initialEntities);
+          await saveCurrentState(initialEntities, true);
+          setLogs(prev => [...prev, "Started new simulation"]);
+        }
+        setHasLoadedInitialState(true);
+      } catch (error) {
+        console.error("Error loading saved state:", error);
+        setError("Failed to load simulation state");
+        const initialEntities = initializeSimulation(settings);
+        setEntities(initialEntities);
+        await saveCurrentState(initialEntities, true);
+        setLogs(prev => [...prev, "Error loading saved state, started new simulation"]);
+        setHasLoadedInitialState(true);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadSavedState();
+  }, []); // Empty dependency array to run only once on mount
+
+  // Update dimensions when window resizes
   useEffect(() => {
     const updateDimensions = () => {
-      if (canvasRef.current) {
-        // For mobile, use full width with small padding
-        const isMobile = window.innerWidth < 640; // sm breakpoint
-        const containerWidth = isMobile 
-          ? window.innerWidth - 16 // 8px padding on each side for mobile
-          : Math.min(window.innerWidth - 32, 800);
-        
-        const containerHeight = isMobile
-          ? window.innerHeight * 0.4 // Smaller height on mobile
-          : Math.min(window.innerHeight * 0.6, 600);
-        
-        // Maintain aspect ratio 4:3
-        const targetAspectRatio = 4/3;
-        let width, height;
-        
-        if (containerWidth / containerHeight > targetAspectRatio) {
-          height = containerHeight;
-          width = height * targetAspectRatio;
-        } else {
-          width = containerWidth;
-          height = width / targetAspectRatio;
-        }
+      if (!canvasRef.current) return;
 
-        canvasRef.current.width = width;
-        canvasRef.current.height = height;
-
-        const cellSize = width / settings.gridSize;
-        setSettings((prev) => ({ ...prev, cellSize }));
+      const isMobile = window.innerWidth < 640;
+      const containerWidth = isMobile ? window.innerWidth - 16 : Math.min(window.innerWidth - 32, 800);
+      const containerHeight = isMobile ? window.innerHeight * 0.4 : Math.min(window.innerHeight * 0.6, 600);
+      
+      const targetAspectRatio = 4/3;
+      let width, height;
+      
+      if (containerWidth / containerHeight > targetAspectRatio) {
+        height = containerHeight;
+        width = height * targetAspectRatio;
+      } else {
+        width = containerWidth;
+        height = width / targetAspectRatio;
       }
+
+      canvasRef.current.width = width;
+      canvasRef.current.height = height;
+
+      const cellSize = width / settings.gridSize;
+      setSettings(prev => ({ ...prev, cellSize }));
+    };
+
+    updateDimensions();
+    window.addEventListener("resize", updateDimensions);
+    return () => window.removeEventListener("resize", updateDimensions);
+  }, [settings.gridSize]);
+
+  // Handle settings changes - only reinitialize if we haven't loaded initial state or if core settings change
+  useEffect(() => {
+    if (!hasLoadedInitialState) return;
+    
+    // Only reinitialize if core simulation parameters change
+    const shouldReinitialize = [
+      settings.gridSize,
+      settings.initialPrey,
+      settings.initialPredators,
+      settings.initialGrass
+    ].some((value, index) => {
+      const oldSettings = JSON.parse(localStorage.getItem('lastSettings') || '{}');
+      return oldSettings[`param${index}`] !== value;
+    });
+
+    if (shouldReinitialize) {
+      const newEntities = initializeSimulation(settings);
+      setEntities(newEntities);
+      updateStats(newEntities);
+      saveCurrentState(newEntities, true);
+      
+      // Save current settings to compare next time
+      localStorage.setItem('lastSettings', JSON.stringify({
+        param0: settings.gridSize,
+        param1: settings.initialPrey,
+        param2: settings.initialPredators,
+        param3: settings.initialGrass
+      }));
     }
+  }, [hasLoadedInitialState, settings.gridSize, settings.initialPrey, settings.initialPredators, settings.initialGrass]);
 
-    updateDimensions()
-    window.addEventListener("resize", updateDimensions)
-    return () => window.removeEventListener("resize", updateDimensions)
-  }, [settings.gridSize])
-
+  // Update simulation
   useEffect(() => {
-    const newEntities = initializeSimulation(settings)
-    setEntities(newEntities)
-    updateStats(newEntities)
-  }, [settings])
+    if (!isRunning) return;
+    
+    let lastSaveTime = Date.now();
+    const SAVE_INTERVAL = 1000; // Save at most once per second
+    
+    const interval = setInterval(() => {
+      setEntities(prevEntities => {
+        const { newEntities, events } = updateSimulation(prevEntities, settings);
+        
+        // Update stats and logs
+        updateStats(newEntities);
+        setLogs(prevLogs => [...prevLogs, ...events].slice(-MAX_LOG_SIZE));
+        
+        // Save state periodically
+        const now = Date.now();
+        if (now - lastSaveTime >= SAVE_INTERVAL) {
+          saveCurrentState(newEntities);
+          lastSaveTime = now;
+        }
+        
+        return newEntities;
+      });
+    }, speed === "very-slow" ? 1000 :
+       speed === "slow" ? 750 :
+       speed === "normal" ? 500 :
+       speed === "fast" ? 250 :
+       100
+    );
 
-  useEffect(() => {
-    if (!isRunning) return
-    const interval = setInterval(
-      () => {
-        setEntities((prevEntities) => {
-          const { newEntities, events } = updateSimulation(prevEntities, settings)
-          updateStats(newEntities)
-          // Keep only the last MAX_LOG_SIZE events
-          setLogs((prevLogs) => [...prevLogs, ...events].slice(-MAX_LOG_SIZE))
-          return newEntities
-        })
-      },
-      speed === "very-slow" ? 1000 :
-      speed === "slow" ? 750 :
-      speed === "normal" ? 500 :
-      speed === "fast" ? 250 :
-      100, // very-fast
-    )
-    return () => clearInterval(interval)
-  }, [isRunning, settings, speed])
+    return () => {
+      clearInterval(interval);
+      // Save state when stopping simulation
+      setEntities(prevEntities => {
+        saveCurrentState(prevEntities, true);
+        return prevEntities;
+      });
+    };
+  }, [isRunning, settings, speed, saveCurrentState]);
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -175,17 +283,27 @@ export const PredatorPreySimulation = () => {
     )
   }, [entities, settings.cellSize, settings.gridSize])
 
-  const updateStats = (newEntities: Entity[]) => {
-    const prey = newEntities.filter((e) => e.type === "prey").length
-    const predators = newEntities.filter((e) => e.type === "predator").length
-    const grass = newEntities.filter((e) => e.type === "grass" && e.energy > 0).length
+  const updateStats = useCallback((newEntities: Entity[]) => {
+    const prey = newEntities.filter((e) => e.type === "prey").length;
+    const predators = newEntities.filter((e) => e.type === "predator").length;
+    const grass = newEntities.filter((e) => e.type === "grass" && e.energy > 0).length;
     setStats((prevStats) => ({
       prey,
       predators,
       grassCoverage: Math.round((grass / (settings.gridSize * settings.gridSize)) * 100),
       predatorKills: prevStats.predatorKills + (prevStats.prey - prey > 0 ? prevStats.prey - prey : 0),
-    }))
-  }
+    }));
+  }, [settings.gridSize]);
+
+  const handleReset = useCallback(async () => {
+    setIsRunning(false);
+    const newEntities = initializeSimulation(settings);
+    setEntities(newEntities);
+    setStats({ prey: 0, predators: 0, grassCoverage: 0, predatorKills: 0 });
+    updateStats(newEntities);
+    setLogs([]);
+    await saveCurrentState(newEntities, true);
+  }, [settings, saveCurrentState, updateStats]);
 
   const exportLogs = () => {
     const blob = new Blob([logs.join("\n")], { type: "text/plain" })
@@ -280,12 +398,7 @@ export const PredatorPreySimulation = () => {
         <Controls
           isRunning={isRunning}
           setIsRunning={setIsRunning}
-          onReset={() => {
-            const newEntities = initializeSimulation(settings)
-            setEntities(newEntities)
-            updateStats(newEntities)
-            setLogs([])
-          }}
+          onReset={handleReset}
           speed={speed}
           setSpeed={setSpeed}
         />
@@ -335,5 +448,7 @@ export const PredatorPreySimulation = () => {
     </div>
   )
 }
+
+export default PredatorPreySimulation;
 
 

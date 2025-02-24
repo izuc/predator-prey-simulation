@@ -3,9 +3,12 @@ import type React from "react"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Predator-Prey Ecosystem",
-  description: "A simulation of a predator-prey ecosystem",
-    generator: 'v0.dev'
+  title: "Predator-Prey Simulation",
+  description: "A simulation of predator-prey dynamics",
+  icons: {
+    icon: '/favicon.ico',
+  },
+  generator: 'v0.dev'
 }
 
 export default function RootLayout({
